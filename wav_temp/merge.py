@@ -2,6 +2,8 @@ import os
 
 from pydub import AudioSegment
 
+import infer_tool
+
 out_wav_path = "./wav_temp/output"
 
 
@@ -26,5 +28,5 @@ def run(out_name):
     out_path = f'./results/{out_name}.wav'
     in_files.append(out_path)
     wav_combine(in_files)
-    print("out sovits success")
+    print("out vits success")
     # infer_tool.del_temp_wav("./wav_temp")

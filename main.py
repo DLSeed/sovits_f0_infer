@@ -6,7 +6,7 @@ import demjson
 import soundfile
 import torch
 
-from sovits import infer_tool
+import infer_tool
 from wav_temp import merge
 
 infer_tool.mkdir(["./raw", "./pth", "./results"])
@@ -14,14 +14,14 @@ logging.getLogger('numba').setLevel(logging.WARNING)
 # 自行下载hubert-soft-0d54a1f4.pt改名为hubert.pt放置于pth文件夹下
 # https://github.com/bshall/hubert/releases/tag/v0.1
 # pth文件夹，放置hubert、sovits模型
-# 可填写音源文件列表、名称不含空格，音源文件格式为wav，放置于raw文件夹下
-clean_names = ["变成猫了"]
+# 可填写音源文件列表，音源文件格式为wav，放置于raw文件夹下
+clean_names = ["宁夏"]
 # 合成多少歌曲时，若半音数量不足、自动补齐相同数量（按第一首歌的半音）
-trans = [-3]  # 加减半音数（可为正负）
+trans = [0]  # 加减半音数（可为正负）
 # 每首歌同时输出的speaker_id
-id_list = [4]
+id_list = [3]
 
-model_name = "152_epochs.pth"  # 模型名称（pth文件夹下）
+model_name = "14_epochs.pth"  # 模型名称（pth文件夹下）
 config_name = "nyarumul.json"  # 模型配置（config文件夹下）
 
 # 加载sovits模型、参数
@@ -46,7 +46,7 @@ for clean_name, tran in zip(clean_names, trans):
         out_audio_name = model_name.split(".")[0] + f"_{clean_name}_{speakers[spk_id]}"
 
         proc = subprocess.Popen(
-            f"python ./sovits/slicer.py {raw_audio_path} --out_name {out_audio_name} --out {input_wav_path}  --db_thresh -30",
+            f"python slicer.py {raw_audio_path} --out_name {out_audio_name} --out {input_wav_path}  --db_thresh -30",
             shell=True).wait()
         # shutil.copy(raw_audio_path, f"{input_wav_path}/{out_audio_name}-00.wav")
         count = 0

@@ -5,7 +5,7 @@ import gradio as gr
 import soundfile
 import torch
 
-from sovits import infer_tool
+import infer_tool
 
 logging.getLogger('numba').setLevel(logging.WARNING)
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
