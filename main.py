@@ -15,13 +15,13 @@ logging.getLogger('numba').setLevel(logging.WARNING)
 # https://github.com/bshall/hubert/releases/tag/v0.1
 # pth文件夹，放置hubert、sovits模型
 # 可填写音源文件列表，音源文件格式为wav，放置于raw文件夹下
-clean_names = ["宁夏"]
+clean_names = ["one_last_kiss"]
 # 合成多少歌曲时，若半音数量不足、自动补齐相同数量（按第一首歌的半音）
 trans = [0]  # 加减半音数（可为正负）
 # 每首歌同时输出的speaker_id
-id_list = [3]
+id_list = [0]
 
-model_name = "14_epochs.pth"  # 模型名称（pth文件夹下）
+model_name = "152_epochs.pth"  # 模型名称（pth文件夹下）
 config_name = "nyarumul.json"  # 模型配置（config文件夹下）
 
 # 加载sovits模型、参数

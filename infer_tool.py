@@ -6,12 +6,13 @@ import numpy as np
 import soundfile
 import torch
 import torchaudio
-
+import logging
 import hubert_model
 import utils
 from models import SynthesizerTrn
 from preprocess_wave import FeatureInput
 
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

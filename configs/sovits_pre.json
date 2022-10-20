@@ -20,8 +20,8 @@
     "c_kl": 1.0
   },
   "data": {
-    "training_files": "/root/sovits/filelist/train.txt",
-    "validation_files": "/root/sovits/filelist/val.txt",
+    "training_files": "/content/sovits_f0_train/filelist/train.txt",
+    "validation_files": "/content/sovits_f0_train/filelist/val.txt",
     "text_cleaners": [
       "english_cleaners2"
     ],
