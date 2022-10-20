@@ -43,7 +43,10 @@ def piecewise_rational_quadratic_transform(inputs,
 
 def searchsorted(bin_locations, inputs, eps=1e-6):
     bin_locations[..., -1] += eps
-    return torch.sum(inputs[..., None] >= bin_locations, dim=-1) - 1
+    return torch.sum(
+        inputs[..., None] >= bin_locations,
+        dim=-1
+    ) - 1
 
 
 def unconstrained_rational_quadratic_spline(inputs,
@@ -145,11 +148,14 @@ def rational_quadratic_spline(inputs,
     input_heights = heights.gather(-1, bin_idx)[..., 0]
 
     if inverse:
-        a = (inputs - input_cumheights) * (
-                input_derivatives + input_derivatives_plus_one - 2 * input_delta) + input_heights * (
-                    input_delta - input_derivatives)
-        b = (input_heights * input_derivatives - (inputs - input_cumheights) * (
-                    input_derivatives + input_derivatives_plus_one- 2 * input_delta))
+        a = (((inputs - input_cumheights) * (input_derivatives
+                                             + input_derivatives_plus_one
+                                             - 2 * input_delta)
+              + input_heights * (input_delta - input_derivatives)))
+        b = (input_heights * input_derivatives
+             - (inputs - input_cumheights) * (input_derivatives
+                                              + input_derivatives_plus_one
+                                              - 2 * input_delta))
         c = - input_delta * (inputs - input_cumheights)
 
         discriminant = b.pow(2) - 4 * a * c

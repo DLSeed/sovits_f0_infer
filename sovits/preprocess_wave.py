@@ -1,6 +1,11 @@
+import os
+
+import librosa
 import numpy as np
 import pyworld
 from scipy.io import wavfile
+
+from sovits import utils
 
 
 class FeatureInput(object):
@@ -14,8 +19,8 @@ class FeatureInput(object):
         self.f0_mel_min = 1127 * np.log(1 + self.f0_min / 700)
         self.f0_mel_max = 1127 * np.log(1 + self.f0_max / 700)
 
-    def compute_f0(self, audio, sr):
-        x, sr = audio, self.fs
+    def compute_f0(self, path):
+        x, sr = librosa.load(path, sr=self.fs)
         assert sr == self.fs
         f0, t = pyworld.dio(
             x.astype(np.double),
@@ -65,3 +70,49 @@ class FeatureInput(object):
     def save_wav(self, wav, path):
         wav *= 32767 / max(0.01, np.max(np.abs(wav))) * 0.6
         wavfile.write(path, self.fs, wav.astype(np.int16))
+
+
+if __name__ == "__main__":
+    wavPath = "./data/waves"
+    outPath = "./data/label"
+    if not os.path.exists("./data/label"):
+        os.mkdir("./data/label")
+
+    # define model and load checkpoint
+    hps = utils.get_hparams_from_file("./configs/singing_base.json")
+    featureInput = FeatureInput(hps.data.sampling_rate, hps.data.hop_length)
+    vits_file = open("./filelists/vc_file.txt", "w", encoding="utf-8")
+
+    for spks in os.listdir(wavPath):
+        if os.path.isdir(f"./{wavPath}/{spks}"):
+            os.makedirs(f"./{outPath}/{spks}")
+            for file in os.listdir(f"./{wavPath}/{spks}"):
+                if file.endswith(".wav"):
+                    file = file[:-4]
+                    audio_path = f"./{wavPath}/{spks}/{file}.wav"
+                    featur_pit = featureInput.compute_f0(audio_path)
+                    coarse_pit = featureInput.coarse_f0(featur_pit)
+                    np.save(
+                        f"{outPath}/{spks}/{file}_pitch.npy",
+                        coarse_pit,
+                        allow_pickle=False,
+                    )
+                    np.save(
+                        f"{outPath}/{spks}/{file}_nsff0.npy",
+                        featur_pit,
+                        allow_pickle=False,
+                    )
+
+                    path_audio = f"./data/waves/{spks}/{file}.wav"
+                    path_spkid = f"./data/spkid/{spks}.npy"
+                    path_label = (
+                        f"./data/phone/{spks}/{file}.npy"  # phone means ppg & hubert
+                    )
+                    path_pitch = f"./data/label/{spks}/{file}_pitch.npy"
+                    path_nsff0 = f"./data/label/{spks}/{file}_nsff0.npy"
+                    print(
+                        f"{path_audio}|{path_spkid}|{path_label}|{path_pitch}|{path_nsff0}",
+                        file=vits_file,
+                    )
+
+    vits_file.close()

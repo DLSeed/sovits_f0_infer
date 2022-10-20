@@ -18,12 +18,12 @@ def wav_combine(*args):
     playlist.export(args[0][n + 1], format="wav")
 
 
-def run(out_name, end):
+def run(out_name):
     file_list = os.listdir(out_wav_path)
     in_files = [len(file_list)]
     for i in range(0, len(file_list)):
         in_files.append(f"{out_wav_path}/{out_name}-%s.wav" % str(i).zfill(2))
-    out_path = f'./results/{out_name}{end}.wav'
+    out_path = f'./results/{out_name}.wav'
     in_files.append(out_path)
     wav_combine(in_files)
     print("out sovits success")

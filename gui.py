@@ -6,21 +6,21 @@ import soundfile
 import torch
 
 from sovits import infer_tool
-from sovits.infer_tool import Svc
 
 logging.getLogger('numba').setLevel(logging.WARNING)
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 spk_dict = {}
 
-svc_model = None
+net_g_ms, hubert_soft, feature_input, hps_ms = None, None, None, None
 
 
 def load_model(md_name, cfg_json):
-    global svc_model, spk_dict
-    svc_model = Svc(md_name, cfg_json)
-    if "speakers" in svc_model.hps_ms.keys():
-        for i, spk in enumerate(svc_model.hps_ms.speakers):
+    global net_g_ms, hubert_soft, feature_input, hps_ms
+    net_g_ms, hubert_soft, feature_input, hps_ms = infer_tool.load_model(md_name, cfg_json)
+    global spk_dict
+    if "speakers" in hps_ms.keys():
+        for i, spk in enumerate(hps_ms.speakers):
             spk_dict[spk] = i
         spk_list = list(spk_dict.keys())
     else:
@@ -35,13 +35,14 @@ def infer(sid, audio_record, audio_upload, tran):
         audio_path = audio_record
     else:
         return "你需要上传wav文件或使用网页内置的录音！", None
-    o_audio, out_sr = svc_model.infer(spk_dict[sid], tran, audio_path)
-    o_audio = o_audio.cpu().numpy()
+    target_sample = hps_ms.data.sampling_rate
+    o_audio, out_sr = infer_tool.infer(audio_path, spk_dict[sid], tran, net_g_ms, hubert_soft, feature_input)
     out_path = f"./out_temp.wav"
-    soundfile.write(out_path, o_audio, svc_model.target_sample)
-    mistake, var = svc_model.calc_error(audio_path, out_path, tran)
+    soundfile.write(out_path, o_audio, target_sample)
+    infer_tool.f0_plt(audio_path, out_path, tran, hubert_soft, feature_input)
+    mistake, var = infer_tool.calc_error(audio_path, out_path, tran, feature_input)
     return f"分段误差参考：0.3优秀，0.5左右合理，少量0.8-1可以接受\n若偏差过大，请调整升降半音数；多次调整均过大、说明超出歌手音域\n半音偏差：{mistake}\n半音方差：{var}", (
-        svc_model.target_sample, o_audio)
+        target_sample, o_audio), gr.Image.update("temp.jpg")
 
 
 app = gr.Blocks()
@@ -73,9 +74,10 @@ with app:
                 vc_submit = gr.Button("转换", variant="primary")
                 out_message = gr.Textbox(label="Output Message")
                 out_audio = gr.Audio(label="Output Audio")
+                f0_image = gr.Image(label="f0曲线")
             vc_config.click(load_model, [model_name, config_json], [model_mess, speaker_id])
             vc_submit.click(infer, [speaker_id, record_input, upload_input, vc_transform],
-                            [out_message, out_audio])
+                            [out_message, out_audio, f0_image])
         with gr.TabItem("使用说明"):
             gr.Markdown(value="""
                         0、合集：https://github.com/IceKyrin/sovits_guide/blob/main/README.md

@@ -2,10 +2,9 @@ import os.path
 import time
 from argparse import ArgumentParser
 
+import librosa
 import numpy as np
 import soundfile
-import torch
-import torchaudio
 from scipy.ndimage import maximum_filter1d, uniform_filter1d
 
 
@@ -61,7 +60,10 @@ class Slicer:
 
     @timeit
     def slice(self, audio):
-        samples = audio
+        if len(audio.shape) > 1:
+            samples = librosa.to_mono(audio)
+        else:
+            samples = audio
         if samples.shape[0] <= self.min_samples:
             return [audio]
         # get absolute amplitudes
@@ -134,11 +136,7 @@ def main():
     out = args.out
     if out is None:
         out = os.path.dirname(os.path.abspath(args.audio))
-    audio, sr = torchaudio.load(args.audio)
-    if len(audio.shape) == 2 and audio.shape[1] >= 2:
-        audio = torch.mean(audio, dim=0).unsqueeze(0)
-    audio = audio.cpu().numpy()[0]
-
+    audio, sr = librosa.load(args.audio, sr=None)
     slicer = Slicer(
         sr=sr,
         db_threshold=args.db_thresh,
