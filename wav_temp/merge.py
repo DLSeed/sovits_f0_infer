@@ -2,9 +2,27 @@ import os
 
 from pydub import AudioSegment
 
-import infer_tool
 
-out_wav_path = "./wav_temp/output"
+def add_db(music1, music2):
+    music1_db = music1.dBFS
+    music2_db = music2.dBFS
+    # 调整两个音频的响度一致
+    db_plus = music1_db - music2_db
+    if db_plus > 0:
+        music2 += abs(db_plus)
+    elif db_plus < 0:
+        music2 -= abs(db_plus)
+    return music2
+
+
+def wav_mix(vocals_name, bgm_name, out_name):
+    bgm = AudioSegment.from_wav(f"./raw/{bgm_name}.wav")
+    vits = AudioSegment.from_wav(f"./results/{vocals_name}.wav")
+    vocals = AudioSegment.from_wav(f"./raw/{vocals_name}.wav")
+    vits = add_db(vocals, vits)
+    output = bgm.overlay(vits)
+    # save the result
+    output.export(f"./results/{out_name}.mp3", format="mp3")
 
 
 def wav_combine(*args):
@@ -20,13 +38,15 @@ def wav_combine(*args):
     playlist.export(args[0][n + 1], format="wav")
 
 
-def run(out_name):
-    file_list = os.listdir(out_wav_path)
+def run(vocals_name, bgm_name, out_name):
+    file_list = os.listdir("./wav_temp/output")
     in_files = [len(file_list)]
     for i in range(0, len(file_list)):
-        in_files.append(f"{out_wav_path}/{out_name}-%s.wav" % str(i).zfill(1))
-    out_path = f'./results/{out_name}.wav'
+        in_files.append(f"./wav_temp/output/{vocals_name}-%s.wav" % i)
+    out_path = f'./results/{vocals_name}.wav'
     in_files.append(out_path)
     wav_combine(in_files)
     print("out vits success")
-    # infer_tool.del_temp_wav("./wav_temp")
+    if os.path.exists(f"./raw/{bgm_name}.wav"):
+        wav_mix(vocals_name, bgm_name, out_name)
+        print("out song success")
