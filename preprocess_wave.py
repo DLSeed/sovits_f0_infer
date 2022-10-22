@@ -14,7 +14,7 @@ class FeatureInput(object):
         self.hop = hop_size
 
         self.f0_bin = 256
-        self.f0_max = 1100.0
+        self.f0_max = 1600.0 #1100.0
         self.f0_min = 50.0
         self.f0_mel_min = 1127 * np.log(1 + self.f0_min / 700)
         self.f0_mel_max = 1127 * np.log(1 + self.f0_max / 700)
